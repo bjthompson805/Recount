@@ -304,9 +304,14 @@ function me:CreateRow(num)
 	local rowmin = 1
 	local offs = 0
 
+	if Recount.db.profile.MainWindow.AlwaysShowSelf then
+		offs = offs + 1
+		rowmin = rowmin - 1
+	end
+
 	if not Recount.db.profile.MainWindow.HideTotalBar then
-		offs = 1
-		rowmin = 0
+		offs = offs + 1
+		rowmin = rowmin - 1
 	end
 
 
@@ -493,8 +498,11 @@ end
 
 function Recount:BarsChanged()
 	local offs = 0
+	if Recount.db.profile.MainWindow.AlwaysShowSelf then
+		offs = offs + 1
+	end
 	if not Recount.db.profile.MainWindow.HideTotalBar then
-		offs = 1
+		offs = offs + 1
 	end
 
 	for k, v in pairs(Recount.MainWindow.Rows) do
@@ -530,9 +538,13 @@ end
 
 function me:SetBar(num, left, right, value, colorgroup, colorclass, clickData, clickFunc, tooltipData)
 	local rowmin = 1
+	
+	if Recount.db.profile.MainWindow.AlwaysShowSelf then
+		rowmin = rowmin - 1
+	end
 
 	if not Recount.db.profile.MainWindow.HideTotalBar then
-		rowmin = 0
+		rowmin = rowmin - 1
 	end
 
 	if num < rowmin or not Recount.MainWindow.Rows[num] then
@@ -600,21 +612,32 @@ function Recount:ResizeMainWindow()
 	--How many bars do we have now?
 	local Bars = math_floor((Recount.MainWindow:GetHeight() - 32.95) / (Recount.db.profile.MainWindow.RowHeight + Recount.db.profile.MainWindow.RowSpacing))
 
-	local minbar
+	local minbar = 1
 
-	if not Recount.db.profile.MainWindow.HideTotalBar then
-		minbar = 0
+	if Recount.db.profile.MainWindow.AlwaysShowSelf then
+		minbar = minbar - 1
 		Bars = Bars - 1
 	else
-		minbar = 1
-		if Recount.MainWindow.Rows[0] then
-			Recount.MainWindow.Rows[0]:Hide()
+		if Recount.MainWindow.Rows[minbar - 1] then
+			Recount.MainWindow.Rows[minbar - 1]:Hide()
 		end
 	end
 
+	if Recount.db.profile.MainWindow.AlwaysShowSelf and not Recount.MainWindow.Rows[minbar] then
+		me:CreateRow(minbar)
+	end
 
-	if not Recount.db.profile.MainWindow.HideTotalBar and not Recount.MainWindow.Rows[0] then -- Elsia: Create Total Bar
-		me:CreateRow(0)
+	if not Recount.db.profile.MainWindow.HideTotalBar then
+		minbar = minbar - 1
+		Bars = Bars - 1
+	else
+		if Recount.MainWindow.Rows[minbar - 1] then
+			Recount.MainWindow.Rows[minbar - 1]:Hide()
+		end
+	end
+
+	if not Recount.db.profile.MainWindow.HideTotalBar and not Recount.MainWindow.Rows[minbar] then -- Elsia: Create Total Bar
+		me:CreateRow(minbar)
 	end
 
 	if Bars < Recount.MainWindow.CurRows then
@@ -1186,41 +1209,58 @@ function Recount:RefreshMainWindow(datarefresh)
 	local MainWindow_BarText_RankNum = MainWindow_Settings.BarText.RankNum
 	local MainWindow_BarText_PerSec = MainWindow_Settings.BarText.PerSec
 	local MainWindow_BarText_Percent = MainWindow_Settings.BarText.Percent
+	local minbar = 1
 
-	if not MainWindow_Settings.HideTotalBar and MainWindow.CurRows > 0 and Total > 0 then
-		if TotalPerSec > 0 then
-			PerSec = Recount:FormatLongNums(TotalPerSec)
-			--PerSec = string_format("%.1f", TotalPerSec)
-		else
-			PerSec = ""
-		end
+	if MainWindow_Settings.AlwaysShowSelf then
+		minbar = minbar - 1
 
-		if not rows[0] then
-			me:CreateRow(0)
-		end
+		local playerName = UnitName("player")
+		for i, v in ipairs(dispTable) do
+			if v[1] == playerName then
+				if not rows[minbar] then
+					me:CreateRow(minbar)
+				end
+				
+				local percent = 100
+				if Total ~= 0 then
+					percent = 100 * v[2] / Total
+				end
+				if v[5] then
+					if type(v[5]) == "number" then
+						--PerSec = string_format("%.1f",v[5])
+						PerSec = Recount:FormatLongNums(v[5])
+					else
+						PerSec = v[5]
+					end
+				else
+					PerSec = ""
+				end
+				local lefttext = MainWindow_BarText_RankNum and i + offset..". "..v[1] or v[1]
+				local righttext = Recount:FormatLongNums(v[2]) --string_format("%.0f", v[2])
+				if MainWindow_BarText_PerSec and PerSec ~= "" then
+					righttext = string_format("%s (%s", righttext, PerSec)
+					if MainWindow_BarText_Percent then
+						righttext = string_format("%s, %.1f%%)", righttext, percent)
+					else
+						righttext = righttext .. ")"
+					end
+				elseif MainWindow_BarText_Percent then
+					righttext = string_format("%s (%.1f%%)", righttext, percent)
+				end
 
-		local lefttext = MainWindow_BarText_RankNum and "0. "..L["Total"] or L["Total"]
-		local righttext = Recount:FormatLongNums(Total) --string_format("%.0f", Total)
-		if MainWindow_BarText_PerSec and PerSec ~= "" then
-			righttext = string_format("%s (%s", righttext, PerSec)
-			if MainWindow_BarText_Percent then
-				righttext = string_format("%s, %.1f%%)", righttext, 100.0)
-			else
-				righttext = righttext .. ")"
+				if MaxValue ~= 0 then
+					percent = 100 * v[2] / MaxValue
+				end
+
+				me:SetBar(minbar, lefttext, righttext, percent, "Class", v[3], v[1], me.MainWindowSelectPlayer, v[4])
+				me:FixRow(minbar)
+				rows[minbar]:SetWidth(RowWidth)
 			end
-		elseif MainWindow_BarText_Percent then
-			righttext = string_format("%s (%.1f%%)", righttext, 100.0)
 		end
+	end
 
-		me:SetBar(0, lefttext, righttext, 100, "Bar", "Total Bar", L["Total"], nil, nil) --Recount.db.profile.Colors.Bar["Total Bar"]
-		me:FixRow(0)
-		rows[0].name = "Total"
-		rows[0]:SetWidth(RowWidth)
-		--offset = offset + 1 -- Add a row
-	else
-		if rows[0] then
-			rows[0]:Hide()
-		end
+	if not MainWindow_Settings.AlwaysShowSelf and rows[minbar - 1] then
+		rows[minbar - 1]:Hide()
 	end
 
 	for i = 1, MainWindow.CurRows do
@@ -1266,6 +1306,46 @@ function Recount:RefreshMainWindow(datarefresh)
 		end
 
 		rows[i]:SetWidth(RowWidth)
+	end
+
+	if not MainWindow_Settings.HideTotalBar and MainWindow.CurRows > 0 and Total > 0 then
+		minbar = minbar - 1
+		if TotalPerSec > 0 then
+			PerSec = Recount:FormatLongNums(TotalPerSec)
+			--PerSec = string_format("%.1f", TotalPerSec)
+		else
+			PerSec = ""
+		end
+
+		if not rows[minbar] then
+			me:CreateRow(minbar)
+		end
+
+		local lefttext = MainWindow_BarText_RankNum and "0. "..L["Total"] or L["Total"]
+		local righttext = Recount:FormatLongNums(Total) --string_format("%.0f", Total)
+		if MainWindow_BarText_PerSec and PerSec ~= "" then
+			righttext = string_format("%s (%s", righttext, PerSec)
+			if MainWindow_BarText_Percent then
+				righttext = string_format("%s, %.1f%%)", righttext, 100.0)
+			else
+				righttext = righttext .. ")"
+			end
+		elseif MainWindow_BarText_Percent then
+			righttext = string_format("%s (%.1f%%)", righttext, 100.0)
+		end
+
+		me:SetBar(minbar, lefttext, righttext, 100, "Bar", "Total Bar", L["Total"], nil, nil) --Recount.db.profile.Colors.Bar["Total Bar"]
+		me:FixRow(minbar)
+		rows[minbar].name = "Total"
+		rows[minbar]:SetWidth(RowWidth)
+		--offset = offset + 1 -- Add a row
+		if rows[minbar - 1] then
+			rows[minbar - 1]:Hide()
+		end
+	else
+		if rows[minbar - 1] then
+			rows[minbar - 1]:Hide()
+		end
 	end
 
 	me:UpdateDetailData()

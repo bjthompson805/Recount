@@ -1841,11 +1841,27 @@ function me:SetupButtonOptions(parent)
 	--theFrame.TotalBarText = theFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	--theFrame.TotalBarText:SetText(L["Show Total Bar"])
 	--theFrame.TotalBarText:SetPoint("LEFT", theFrame.TotalBar, "RIGHT", 8, 0)
+	
+	theFrame.AlwaysShowSelf = me:CreateSavedCheckbox("Always Show Self", theFrame, "MainWindow", "AlwaysShowSelf")
+	theFrame.AlwaysShowSelf:SetPoint("TOPLEFT", theFrame, "TOPLEFT", 12, -175 - 16)
+	theFrame.AlwaysShowSelf:SetScript("OnClick", function(this)
+		if this:GetChecked() then
+			this:SetChecked(true)
+			Recount.db.profile.MainWindow.AlwaysShowSelf = true
+			Recount:RefreshMainWindow()
+			Recount:BarsChanged()
+		else
+			this:SetChecked(false)
+			Recount.db.profile.MainWindow.AlwaysShowSelf = false
+			Recount:RefreshMainWindow()
+			Recount:BarsChanged()
+		end
+	end)
 
 	--theFrame.ShowSB = CreateFrame("CheckButton", nil, theFrame)
 	theFrame.ShowSB = me:CreateSavedCheckbox(L["Show Scrollbar"], theFrame, "MainWindow", "ShowScrollbar")
 	--me:ConfigureCheckbox(theFrame.ShowSB)
-	theFrame.ShowSB:SetPoint("TOPLEFT", theFrame, "TOPLEFT", 12, -175 - 16)
+	theFrame.ShowSB:SetPoint("TOPLEFT", theFrame, "TOPLEFT", 12, -192 - 16)
 	theFrame.ShowSB:SetScript("OnClick", function(this)
 		if this:GetChecked() then
 			this:SetChecked(true)
@@ -1866,7 +1882,7 @@ function me:SetupButtonOptions(parent)
 	--theFrame.AutoHide = CreateFrame("CheckButton", nil, theFrame)
 	theFrame.AutoHide = me:CreateSavedCheckbox(L["Autohide On Combat"], theFrame, "MainWindow", "AutoHide")
 	--me:ConfigureCheckbox(theFrame.AutoHide)
-	theFrame.AutoHide:SetPoint("TOPLEFT", theFrame, "TOPLEFT", 12, -192 - 16)
+	theFrame.AutoHide:SetPoint("TOPLEFT", theFrame, "TOPLEFT", 12, -209 - 16)
 	theFrame.AutoHide:SetScript("OnClick", function(this)
 		if this:GetChecked() then
 			this:SetChecked(true)
@@ -2151,6 +2167,7 @@ function me:LoadConfig()
 	me.ButtonOptions.RowSpacingSlider:SetValue(Recount.db.profile.MainWindow.RowSpacing)
 	me.ButtonOptions.AutoHide:SetChecked(Recount.db.profile.MainWindow.AutoHide)
 	me.ButtonOptions.TotalBar:SetChecked(not Recount.db.profile.MainWindow.HideTotalBar)
+	me.ButtonOptions.AlwaysShowSelf:SetChecked(Recount.db.profile.MainWindow.AlwaysShowSelf)
 	me.ButtonOptions.ShowSB:SetChecked(Recount.db.profile.MainWindow.ShowScrollbar)
 
 	me.WindowOptions.ScalingSlider:SetValue(Recount.db.profile.Scaling)

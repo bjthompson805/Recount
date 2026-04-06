@@ -231,6 +231,7 @@ local Default_Profile = {
 			AutoHide = false,
 			ShowScrollbar = true, -- Elsia: Allow toggle of scrollbar
 			HideTotalBar = true,
+			AlwaysShowSelf = false,
 			BarText = {
 				RankNum = true,
 				ServerName = false,
