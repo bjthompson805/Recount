@@ -1207,8 +1207,6 @@ function Recount:RefreshMainWindow(datarefresh)
 	local rows = MainWindow.Rows
 
 	local MainWindow_BarText_RankNum = MainWindow_Settings.BarText.RankNum
-	local MainWindow_BarText_PerSec = MainWindow_Settings.BarText.PerSec
-	local MainWindow_BarText_Percent = MainWindow_Settings.BarText.Percent
 	local minbar = 1
 
 	if MainWindow_Settings.AlwaysShowSelf then
@@ -1221,33 +1219,10 @@ function Recount:RefreshMainWindow(datarefresh)
 					me:CreateRow(minbar)
 				end
 				
-				local percent = 100
-				if Total ~= 0 then
-					percent = 100 * v[2] / Total
-				end
-				if v[5] then
-					if type(v[5]) == "number" then
-						--PerSec = string_format("%.1f",v[5])
-						PerSec = Recount:FormatLongNums(v[5])
-					else
-						PerSec = v[5]
-					end
-				else
-					PerSec = ""
-				end
-				local lefttext = MainWindow_BarText_RankNum and i + offset..". "..v[1] or v[1]
-				local righttext = Recount:FormatLongNums(v[2]) --string_format("%.0f", v[2])
-				if MainWindow_BarText_PerSec and PerSec ~= "" then
-					righttext = string_format("%s (%s", righttext, PerSec)
-					if MainWindow_BarText_Percent then
-						righttext = string_format("%s, %.1f%%)", righttext, percent)
-					else
-						righttext = righttext .. ")"
-					end
-				elseif MainWindow_BarText_Percent then
-					righttext = string_format("%s (%.1f%%)", righttext, percent)
-				end
+				local lefttext = MainWindow_BarText_RankNum and i .. ". " .. v[1] or v[1]
+				local righttext = Recount:GetRightText(v[5], v[2], Total)
 
+				local percent = 100
 				if MaxValue ~= 0 then
 					percent = 100 * v[2] / MaxValue
 				end
@@ -1267,34 +1242,10 @@ function Recount:RefreshMainWindow(datarefresh)
 		local v = dispTable[i + offset]
 
 		if v then
-			local percent = 100
-			if Total ~= 0 then
-				percent = 100 * v[2] / Total
-			end
-			if v[5] then
-				if type(v[5]) == "number" then
-					--PerSec = string_format("%.1f",v[5])
-					PerSec = Recount:FormatLongNums(v[5])
-				else
-					PerSec = v[5]
-				end
-			else
-				PerSec = ""
-			end
 			local lefttext = MainWindow_BarText_RankNum and i + offset..". "..v[1] or v[1]
-			local righttext = Recount:FormatLongNums(v[2]) --string_format("%.0f", v[2])
-			if MainWindow_BarText_PerSec and PerSec ~= "" then
-				righttext = string_format("%s (%s", righttext, PerSec)
-				if MainWindow_BarText_Percent then
-					righttext = string_format("%s, %.1f%%)", righttext, percent)
-				else
-					righttext = righttext .. ")"
-				end
-			elseif MainWindow_BarText_Percent then
-				righttext = string_format("%s (%.1f%%)", righttext, percent)
-			end
+			local righttext = Recount:GetRightText(v[5], v[2], Total)
 
-			percent = 100
+			local percent = 100
 			if MaxValue ~= 0 then
 				percent = 100 * v[2] / MaxValue
 			end
@@ -1310,29 +1261,17 @@ function Recount:RefreshMainWindow(datarefresh)
 
 	if not MainWindow_Settings.HideTotalBar and MainWindow.CurRows > 0 and Total > 0 then
 		minbar = minbar - 1
-		if TotalPerSec > 0 then
-			PerSec = Recount:FormatLongNums(TotalPerSec)
-			--PerSec = string_format("%.1f", TotalPerSec)
-		else
-			PerSec = ""
-		end
 
 		if not rows[minbar] then
 			me:CreateRow(minbar)
 		end
 
 		local lefttext = MainWindow_BarText_RankNum and "0. "..L["Total"] or L["Total"]
-		local righttext = Recount:FormatLongNums(Total) --string_format("%.0f", Total)
-		if MainWindow_BarText_PerSec and PerSec ~= "" then
-			righttext = string_format("%s (%s", righttext, PerSec)
-			if MainWindow_BarText_Percent then
-				righttext = string_format("%s, %.1f%%)", righttext, 100.0)
-			else
-				righttext = righttext .. ")"
-			end
-		elseif MainWindow_BarText_Percent then
-			righttext = string_format("%s (%.1f%%)", righttext, 100.0)
+		local PerSec = nil
+		if TotalPerSec > 0 then
+			PerSec = TotalPerSec
 		end
+		local righttext = Recount:GetRightText(PerSec, Total, Total)
 
 		me:SetBar(minbar, lefttext, righttext, 100, "Bar", "Total Bar", L["Total"], nil, nil) --Recount.db.profile.Colors.Bar["Total Bar"]
 		me:FixRow(minbar)
@@ -1349,6 +1288,38 @@ function Recount:RefreshMainWindow(datarefresh)
 	end
 
 	me:UpdateDetailData()
+end
+
+-- Helper function for RefreshMainWindow() to prevent duplicate code
+function Recount:GetRightText(PerSec, UnitTotal, Total)
+	local percent = 100
+	if Total ~= 0 then
+		percent = 100 * UnitTotal / Total
+	end
+
+	if PerSec and type(PerSec) == "number" then
+			PerSec = Recount:FormatLongNums(PerSec)
+	end
+	if not PerSec then
+		PerSec = ""
+	end
+	
+	local MainWindow_Settings = Recount.db.profile.MainWindow
+	local MainWindow_BarText_Percent = MainWindow_Settings.BarText.Percent
+	local MainWindow_BarText_PerSec = MainWindow_Settings.BarText.PerSec
+	local righttext = Recount:FormatLongNums(UnitTotal)
+	if MainWindow_BarText_PerSec and PerSec ~= "" then
+		righttext = string_format("%s (%s", righttext, PerSec)
+		if MainWindow_BarText_Percent then
+			righttext = string_format("%s, %.1f%%)", righttext, percent)
+		else
+			righttext = righttext .. ")"
+		end
+	elseif MainWindow_BarText_Percent then
+		righttext = string_format("%s (%.1f%%)", righttext, percent)
+	end
+
+	return righttext
 end
 
 function Recount:OpenFightDropDown(myframe)
