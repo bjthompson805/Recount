@@ -1899,6 +1899,19 @@ function me:SetupButtonOptions(parent)
 	--theFrame.AutohideText = theFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	--theFrame.AutohideText:SetText(L["Autohide On Combat"])
 	--theFrame.AutohideText:SetPoint("LEFT", theFrame.AutoHide, "RIGHT", 8, 0)
+
+	theFrame.AlwaysShowSelf = me:CreateSavedCheckbox(L["Always Show Self"], theFrame, "MainWindow", "AlwaysShowSelf")
+	theFrame.AlwaysShowSelf:SetPoint("TOPLEFT", theFrame, "TOPLEFT", 12, -209 - 16)
+	theFrame.AlwaysShowSelf:SetScript("OnClick", function(this)
+		if this:GetChecked() then
+			this:SetChecked(true)
+			Recount.db.profile.MainWindow.AlwaysShowSelf = true
+		else
+			this:SetChecked(false)
+			Recount.db.profile.MainWindow.AlwaysShowSelf = false
+		end
+		Recount:RefreshMainWindow()
+	end)
 end
 
 
@@ -2169,6 +2182,7 @@ function me:LoadConfig()
 	me.ButtonOptions.RowHeightSlider:SetValue(Recount.db.profile.MainWindow.RowHeight)
 	me.ButtonOptions.RowSpacingSlider:SetValue(Recount.db.profile.MainWindow.RowSpacing)
 	me.ButtonOptions.AutoHide:SetChecked(Recount.db.profile.MainWindow.AutoHide)
+	me.ButtonOptions.AlwaysShowSelf:SetChecked(Recount.db.profile.MainWindow.AlwaysShowSelf)
 	me.ButtonOptions.TotalBar:SetChecked(not Recount.db.profile.MainWindow.HideTotalBar)
 	me.ButtonOptions.ShowSB:SetChecked(Recount.db.profile.MainWindow.ShowScrollbar)
 

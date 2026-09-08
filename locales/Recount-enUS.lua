@@ -26,6 +26,7 @@ L["Absorbs"] = true
 L["Activity"] = true
 L["Add to Current Graph (Alt Click)"] = true
 L["Allows the data of a window to be reported"] = true
+L["Always Show Self"] = true
 L["Appearance"] = true
 L["Arcane"] = true
 L["Arenas"] = true

@@ -219,6 +219,7 @@ local Default_Profile = {
 			RowHeight = 14,
 			RowSpacing = 1,
 			AutoHide = false,
+			AlwaysShowSelf = false,
 			ShowScrollbar = true, -- Elsia: Allow toggle of scrollbar
 			HideTotalBar = true,
 			BarText = {

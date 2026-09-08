@@ -1294,8 +1294,31 @@ function Recount:RefreshMainWindow(datarefresh)
 		end
 	end
 
+	-- Always Show Self: if the player's own row would fall outside the
+	-- currently visible window, pin it into the nearest visible slot (top if
+	-- their rank is above the window, bottom if below) instead of scrolling.
+	local pinnedSlot, pinnedRank
+	if MainWindow_Settings.AlwaysShowSelf and Recount.PlayerName and MainWindow.CurRows > 0 then
+		for idx, v in ipairs(dispTable) do
+			if v[1] == Recount.PlayerName then
+				if idx < offset + 1 then
+					pinnedSlot, pinnedRank = 1, idx
+				elseif idx > offset + MainWindow.CurRows then
+					pinnedSlot, pinnedRank = MainWindow.CurRows, idx
+				end
+				break
+			end
+		end
+	end
+
 	for i = 1, MainWindow.CurRows do
-		local v = dispTable[i + offset]
+		local rank = i + offset
+		local v = dispTable[rank]
+
+		if i == pinnedSlot then
+			rank = pinnedRank
+			v = dispTable[pinnedRank]
+		end
 
 		if v then
 			local percent = 100
@@ -1312,7 +1335,7 @@ function Recount:RefreshMainWindow(datarefresh)
 			else
 				PerSec = ""
 			end
-			local lefttext = MainWindow_BarText_RankNum and i + offset..". "..v[1] or v[1]
+			local lefttext = MainWindow_BarText_RankNum and rank..". "..v[1] or v[1]
 			local righttext = Recount:FormatLongNums(v[2]) --string_format("%.0f", v[2])
 			if MainWindow_BarText_PerSec and PerSec ~= "" then
 				righttext = string_format("%s (%s", righttext, PerSec)
