@@ -182,6 +182,7 @@ local Default_Profile = {
 		ConfirmDeleteRaid = true,
 		DeleteJoinGroup = true,
 		ConfirmDeleteGroup = true,
+		DeleteOnLogOff = false,
 		BarTexture = "BantoBar",
 		MergePets = true,
 		MergeAbsorbs = true,
@@ -1901,6 +1902,12 @@ end
 -- call is still blocked), and pcall doesn't help (ADDON_ACTION_FORBIDDEN is
 -- async). The replacement data source on Midnight is C_DamageMeter, wired
 -- through Tracker_Midnight.lua (Mainline TOC only).
+function Recount:PLAYER_LOGOUT()
+	if Recount.db.profile.DeleteOnLogOff then
+		Recount:ResetData()
+	end
+end
+
 function Recount:RegisterCombatLogEvent()
 	if WOW_RETAIL_MIDNIGHT then
 		if Recount.RegisterCombatLogEvent_Midnight then
@@ -1923,6 +1930,7 @@ function Recount:OnEnable()
 	--Recount.events:RegisterEvent("PLAYER_PET_CHANGED")
 	Recount.events:RegisterEvent("ZONE_CHANGED_NEW_AREA") -- Elsia: This is needed for zone change deletion and collection
 	Recount.events:RegisterEvent("PLAYER_ENTERING_WORLD") -- Attempt to fix Onyxia instance entrance which isn't a new zone.
+	Recount.events:RegisterEvent("PLAYER_LOGOUT")
 	if WOW_PANDA_CLASSIC then
 		Recount.events:RegisterEvent("PET_BATTLE_OPENING_START")
 		Recount.events:RegisterEvent("PET_BATTLE_CLOSE")

@@ -1340,7 +1340,23 @@ function me:SetupDeletionOptions(parent)
 		end
 	end)
 
-	local i = 6
+	theFrame.TitleEvent = theFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	theFrame.TitleEvent:SetText(L["Event Based Deletion"])
+	theFrame.TitleEvent:SetPoint("TOP", theFrame, "TOP", 0, -192)
+
+	theFrame.AutodeleteLogOff = me:CreateSavedCheckbox(L["Delete on Log Off"], theFrame, "Data", "DeleteOnLogOff")
+	theFrame.AutodeleteLogOff:SetPoint("TOPLEFT", theFrame, "TOPLEFT", 8, -209)
+	theFrame.AutodeleteLogOff:SetScript("OnClick", function(this)
+		if this:GetChecked() then
+			this:SetChecked(true)
+			Recount.db.profile.DeleteOnLogOff = true
+		else
+			this:SetChecked(false)
+			Recount.db.profile.DeleteOnLogOff = false
+		end
+	end)
+
+	local i = 8
 
 	theFrame.Title3 = theFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	theFrame.Title3:SetText(L["Fight Segmentation"])
@@ -2212,6 +2228,7 @@ function me:LoadConfig()
 	if not me.DeletionOptions.AutodeleteR:GetChecked() then
 		me.DeletionOptions.AutodeleteRConf:Disable()
 	end
+	me.DeletionOptions.AutodeleteLogOff:SetChecked(Recount.db.profile.DeleteOnLogOff)
 
 
 	me.FilterOptions.MergePets:SetChecked(Recount.db.profile.MergePets)
