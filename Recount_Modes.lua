@@ -541,8 +541,8 @@ function Recount:AddSortedTooltipData(title, data, num)
 			else
 				percent = 100
 			end
-			local name = SortedData[i][1]
-			GameTooltip:AddDoubleLine(i..". "..name, Recount:FormatLongNums(SortedData[i][2]).." ("..percent.."%)", 1, 1, 1, 1, 1, 1)
+			local name = SortedData[rank][1]
+			GameTooltip:AddDoubleLine(rank..". "..name, Recount:FormatLongNums(SortedData[rank][2]).." ("..percent.."%)", 1, 1, 1, 1, 1, 1)
 		end
 	end
 
